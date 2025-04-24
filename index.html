@@ -1,7 +1,7 @@
 const BASE_TILE_SIZE = 32;  // Base size of each tile
 const GRID_WIDTH = 40;
 const GRID_HEIGHT = 40;
-let TILE_SIZE = BASE_TILE_SIZE;  // Default tile size (will scale based on zoom
+let TILE_SIZE = BASE_TILE_SIZE;  // Default tile size (will scale based on zoom)
 
 const canvas = document.getElementById("mapCanvas");
 const ctx = canvas.getContext("2d");
@@ -107,6 +107,7 @@ canvas.addEventListener("click", (e) => {
   if (x >= 0 && y >= 0 && x < GRID_WIDTH && y < GRID_HEIGHT) {
     if (selectedTile !== null) {
       placedTiles[y][x] = selectedTile;
+      linePath.push({ x, y });  // Add placed tile to the line path
       drawGrid();
     }
   }
@@ -127,6 +128,7 @@ document.addEventListener("keydown", (e) => {
   // Place selected tile without holding anything (WASD)
   if (selectedTile !== null) {
     placedTiles[currentPos.y][currentPos.x] = selectedTile;
+    linePath.push({ ...currentPos });  // Add placed tile to the line path
     drawGrid();
   }
 
@@ -149,7 +151,6 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("keyup", (e) => {
   // Stop drawing line when Enter is released
   if (e.key === "Enter") {
-    linePath.push({ ...currentPos });  // Add final position to line path
     drawGrid();
   }
 });
