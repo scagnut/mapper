@@ -20,6 +20,7 @@ function loadTiles() {
             loadedCount++;
             if (loadedCount === 93) {
                 tilesLoaded = true;
+                initializeSpritesPanel();
                 drawMap();
             }
         };
@@ -64,16 +65,27 @@ function drawMap() {
     ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-// Handle sprite selection (from the side panel)
-document.addEventListener("click", (event) => {
+// Initialize the sprites panel (left side panel)
+function initializeSpritesPanel() {
     const panel = document.getElementById("sprites");
-    const spriteDiv = event.target;
+    panel.innerHTML = ""; // Clear existing sprites (if any)
 
-    if (spriteDiv && spriteDiv.classList.contains("sprite")) {
-        selectedSprite = parseInt(spriteDiv.getAttribute("data-index"), 10); // Set selected sprite by index
-        console.log("Selected sprite: " + selectedSprite); // For debugging
-    }
-});
+    tiles.forEach((tile, index) => {
+        const spriteDiv = document.createElement("div");
+        spriteDiv.classList.add("sprite");
+        spriteDiv.style.backgroundImage = `url('icons/${index}.png')`; // Ensure path is correct
+        spriteDiv.setAttribute("data-index", index); // Store index to identify the sprite
+        panel.appendChild(spriteDiv);
+    });
+
+    // Add click event listener to select a sprite
+    panel.addEventListener("click", (e) => {
+        if (e.target.classList.contains("sprite")) {
+            selectedSprite = parseInt(e.target.getAttribute("data-index"), 10);
+            console.log("Selected sprite:", selectedSprite);
+        }
+    });
+}
 
 // Handle movement (Arrow keys)
 document.addEventListener("keydown", (event) => {
