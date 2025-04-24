@@ -31,6 +31,7 @@
             margin: 5px;
             display: inline-block;
             background-color: lightgray;
+            background-size: cover; /* Ensure icons fit correctly */
             cursor: pointer;
         }
     </style>
@@ -44,19 +45,5 @@
     </div>
 
     <script src="map.js"></script>
-    <script>
-        // Clear existing sprites (if any) to avoid duplicates
-        const panel = document.getElementById("sprites");
-        panel.innerHTML = "";
-
-        // Generate the sprite selection panel dynamically from the tiles
-        for (let i = 0; i < 93; i++) {
-            const spriteDiv = document.createElement("div");
-            spriteDiv.classList.add("sprite");
-            spriteDiv.style.backgroundImage = `url('icons/${i}.png')`; // Ensure path is correct
-            spriteDiv.setAttribute("data-index", i); // Store index to identify the sprite
-            panel.appendChild(spriteDiv);
-        }
-    </script>
 </body>
 </html>
