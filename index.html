@@ -40,101 +40,24 @@
         <div id="sprites">
             <!-- This will dynamically load the sprite icons from your tiles array -->
         </div>
+        <button onclick="saveMap()">Save Map</button>
     </div>
     <div id="canvas-container">
-        <canvas id="mapCanvas" width="640" height="640"></canvas>
+        <canvas id="mapCanvas"></canvas>
     </div>
 
     <script src="map.js"></script>
     <script>
-        const canvas = document.getElementById('mapCanvas');
-        const ctx = canvas.getContext('2d');
-        const panel = document.getElementById('sprites');
-        let selectedSprite = null;
-        let position = { x: 0, y: 0 };
-        let placedTiles = [];
-
-        // Initialize tiles for map
-        const TILE_SIZE = 32;
-        const MAP_WIDTH = 20;
-        const MAP_HEIGHT = 20;
-
-        // Preload all tiles
-        const tiles = [];
-        for (let i = 0; i < 93; i++) {
-            let img = new Image();
-            img.src = `icons/${i}.png`; // Adjust the path to match your setup
-            tiles.push(img);
-        }
-
-        // Randomized map generation
-        const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
-            Array.from({ length: MAP_WIDTH }, () => Math.floor(Math.random() * tiles.length))
-        );
+        const panel = document.getElementById("sprites");
 
         // Generate the sprite selection panel dynamically from the tiles
-        tiles.forEach((tile, index) => {
-            const spriteDiv = document.createElement('div');
-            spriteDiv.classList.add('sprite');
-            spriteDiv.style.backgroundImage = `url('icons/${index}.png')`;
-            spriteDiv.setAttribute('data-index', index); // Store index to identify the sprite
+        for (let i = 0; i < 93; i++) {
+            const spriteDiv = document.createElement("div");
+            spriteDiv.classList.add("sprite");
+            spriteDiv.style.backgroundImage = `url('icons/${i}.png')`;
+            spriteDiv.setAttribute("data-index", i); // Store index to identify the sprite
             panel.appendChild(spriteDiv);
-        });
-
-        // Event listener for sprite selection
-        panel.addEventListener('click', (e) => {
-            if (e.target.classList.contains('sprite')) {
-                selectedSprite = e.target.getAttribute('data-index');
-            }
-        });
-
-        // Draw the map (using the existing map generation code)
-        function drawMap() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-
-            // Draw the randomized map grid
-            for (let y = 0; y < MAP_HEIGHT; y++) {
-                for (let x = 0; x < MAP_WIDTH; x++) {
-                    ctx.drawImage(tiles[mapGrid[y][x]], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
-
-            // Draw placed tiles
-            placedTiles.forEach(tile => {
-                ctx.drawImage(tiles[tile.sprite], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            });
-
-            // Draw the current selected sprite underlay
-            if (selectedSprite !== null) {
-                ctx.drawImage(tiles[selectedSprite], position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
-
-            // Draw the player marker
-            ctx.fillStyle = "red";
-            ctx.fillRect(position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
-
-        // Handle player movement with arrow keys
-        document.addEventListener('keydown', (event) => {
-            const { x, y } = position;
-            if (event.key === "ArrowLeft" && x > 0) position.x--;
-            if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) position.x++;
-            if (event.key === "ArrowUp" && y > 0) position.y--;
-            if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) position.y++;
-            drawMap();
-        });
-
-        // Place sprite with space bar
-        document.addEventListener('keydown', (e) => {
-            if (e.key === ' ' && selectedSprite !== null) {
-                placedTiles.push({ x: position.x, y: position.y, sprite: selectedSprite });
-                drawMap();
-            }
-        });
-
-        window.onload = () => {
-            drawMap();
-        };
     </script>
 </body>
 </html>
