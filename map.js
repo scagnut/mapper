@@ -1,7 +1,7 @@
 const BASE_TILE_SIZE = 32;  // Base size of each tile
 const GRID_WIDTH = 40;
 const GRID_HEIGHT = 40;
-let TILE_SIZE = BASE_TILE_SIZE;  // Default tile size (will scale based on zoom)
+let TILE_SIZE = BASE_TILE_SIZE;  // Default tile size (will scale based on zoom
 
 const canvas = document.getElementById("mapCanvas");
 const ctx = canvas.getContext("2d");
@@ -16,11 +16,8 @@ let placedTiles = Array.from({ length: GRID_HEIGHT }, () =>
   Array(GRID_WIDTH).fill(null)
 );
 
-let lastClickedCell = null;
-let zoomFactor = 1;  // Initial zoom factor (1 is normal size)
-let linePath = [];  // Stores the path of the line (as an array of points)
 let currentPos = { x: 0, y: 0 };  // Current position on the grid
-let drawingLine = false;  // Whether the user is drawing a line
+let linePath = [];  // Stores the path of the line (as an array of points)
 
 // Load all icons
 function loadTiles() {
@@ -110,26 +107,12 @@ canvas.addEventListener("click", (e) => {
   if (x >= 0 && y >= 0 && x < GRID_WIDTH && y < GRID_HEIGHT) {
     if (selectedTile !== null) {
       placedTiles[y][x] = selectedTile;
-      lastClickedCell = { x, y };
       drawGrid();
     }
   }
 });
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Delete" && lastClickedCell) {
-    const { x, y } = lastClickedCell;
-    placedTiles[y][x] = null;
-    drawGrid();
-  }
-
-  // Zoom in and out using +/- keys
-  if (e.key === "+" || e.key === "=") {
-    zoomIn();
-  } else if (e.key === "-" && zoomFactor > 0.5) {
-    zoomOut();
-  }
-
   // Move around the grid with WASD keys
   if (e.key === "w" && currentPos.y > 0) {
     currentPos.y--;
@@ -141,26 +124,32 @@ document.addEventListener("keydown", (e) => {
     currentPos.x++;
   }
 
-  // Start/continue placing tiles
-  if (e.key === "Enter" || e.key === " ") {
-    if (selectedTile !== null) {
-      placedTiles[currentPos.y][currentPos.x] = selectedTile;
-      drawGrid();
-    }
-    if (!drawingLine) {
-      drawingLine = true;
-      linePath = [{ ...currentPos }];  // Start new line
-    } else {
-      linePath.push({ ...currentPos });  // Continue line
-    }
+  // Place selected tile without holding anything (WASD)
+  if (selectedTile !== null) {
+    placedTiles[currentPos.y][currentPos.x] = selectedTile;
+    drawGrid();
   }
 
-  // Stop drawing the line
-  if (e.key === "Escape") {
-    drawingLine = false;
+  // Place a line while holding Enter
+  if (e.key === "Enter") {
+    linePath.push({ ...currentPos });  // Add current position to the line path
+    drawGrid();
   }
 
-  drawGrid();
+  // Zoom in and out using +/- keys
+  if (e.key === "+" || e.key === "=") {
+    zoomIn();
+  } else if (e.key === "-" && zoomFactor > 0.5) {
+    zoomOut();
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  // Stop drawing line when Enter is released
+  if (e.key === "Enter") {
+    linePath.push({ ...currentPos });  // Add final position to line path
+    drawGrid();
+  }
 });
 
 function zoomIn() {
