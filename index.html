@@ -2,48 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MUD Map Maker</title>
     <style>
-        body {
-            display: flex;
-            height: 100vh;
-            margin: 0;
-        }
-        #panel {
-            width: 150px;
-            background-color: #f4f4f4;
-            padding: 10px;
-            overflow-y: auto;
-            border-right: 2px solid #ccc;
-        }
-        #canvas-container {
-            flex-grow: 1;
-            position: relative;
-        }
-        canvas {
-            border: 1px solid #000;
-            background-color: #e8e8e8;
-        }
-        .sprite {
-            width: 30px;
-            height: 30px;
-            margin: 5px;
-            display: inline-block;
-            background-color: lightgray;
-            background-size: cover; /* Ensure icons fit correctly */
-            cursor: pointer;
-        }
+        #iconContainer { float: left; width: 150px; }
+        #gridCanvas { border: 1px solid black; }
     </style>
 </head>
 <body>
-    <div id="panel">
-        <div id="sprites"></div>
-    </div>
-    <div id="canvas-container">
-        <canvas id="mapCanvas"></canvas>
-    </div>
-
+    <h1>MUD Mapping Tool</h1>
+    <div id="iconContainer"></div> <!-- Icons will be loaded here -->
+    <canvas id="gridCanvas" width="640" height="640"></canvas>
     <script src="map.js"></script>
 </body>
 </html>
