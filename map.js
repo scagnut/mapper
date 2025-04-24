@@ -28,19 +28,19 @@ let position = { x: 0, y: 0 }; // Position for sprite placement
 function drawMap() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before redrawing
 
-    // Draw the randomized map grid
+    // Draw the randomized map grid (background tiles)
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
             ctx.drawImage(tiles[mapGrid[y][x]], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
     }
 
-    // Draw the placed tiles
+    // Draw the placed tiles (on top of the map)
     placedTiles.forEach(tile => {
         ctx.drawImage(tiles[tile.sprite], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     });
 
-    // Draw the currently selected sprite as an underlay
+    // Draw the currently selected sprite (as a temporary underlay for placement)
     if (selectedSprite !== null) {
         ctx.drawImage(tiles[selectedSprite], position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
@@ -56,7 +56,7 @@ document.addEventListener("click", (event) => {
     const spriteDiv = event.target;
 
     if (spriteDiv && spriteDiv.classList.contains('sprite')) {
-        selectedSprite = spriteDiv.getAttribute('data-index');
+        selectedSprite = spriteDiv.getAttribute('data-index'); // Set selected sprite by index
         console.log("Selected sprite: " + selectedSprite); // For debugging
     }
 });
@@ -73,11 +73,13 @@ document.addEventListener("keydown", (event) => {
 // Handle sprite placement (space bar)
 document.addEventListener("keydown", (e) => {
     if (e.key === ' ' && selectedSprite !== null) {
+        // Place the selected sprite at the current position in the grid
         placedTiles.push({ x: position.x, y: position.y, sprite: selectedSprite });
         drawMap();
     }
 });
 
+// Start drawing when the page loads
 window.onload = () => {
     drawMap();
 };
