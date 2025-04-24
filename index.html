@@ -3,131 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MUD Mapper</title>
+  <title>MUD Map Editor</title>
   <style>
     body {
       display: flex;
       margin: 0;
-      font-family: sans-serif;
-    }
-
-    #sidebar {
-      width: 180px;
       height: 100vh;
-      overflow-y: scroll;
-      background: #f4f4f4;
-      border-right: 2px solid #ccc;
-      padding: 5px;
+      overflow: hidden;
     }
-
-    .tile {
-      width: 28px;
-      height: 28px;
+    #panel {
+      width: 180px;
+      overflow-y: auto;
+      background: #eee;
+      padding: 5px;
+      border-right: 2px solid #ccc;
+    }
+    .sprite {
+      width: 24px;
+      height: 24px;
       margin: 2px;
-      display: inline-block;
       background-size: cover;
-      border: 1px solid #aaa;
+      display: inline-block;
+      border: 1px solid #ccc;
       cursor: pointer;
     }
-
+    .sprite.selected {
+      border: 2px solid red;
+    }
     #canvas-container {
       flex-grow: 1;
-      overflow: auto;
-      background: #ddd;
+      background: #bbb;
     }
-
     canvas {
       background: #fff;
-      border: 1px solid #000;
-      display: block;
+      image-rendering: pixelated;
     }
   </style>
 </head>
 <body>
-  <div id="sidebar"></div>
+  <div id="panel"></div>
   <div id="canvas-container">
-    <canvas id="mapCanvas"></canvas>
+    <canvas id="mapCanvas" width="1280" height="1280"></canvas>
   </div>
-
-  <script>
-    const TILE_SIZE = 32;
-    const MAP_WIDTH = 50;
-    const MAP_HEIGHT = 50;
-    const canvas = document.getElementById("mapCanvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = TILE_SIZE * MAP_WIDTH;
-    canvas.height = TILE_SIZE * MAP_HEIGHT;
-
-    const sidebar = document.getElementById("sidebar");
-    const allTiles = {};
-    let selectedTileKey = null;
-
-    const grid = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
-
-    // Load tiles
-    function loadTiles() {
-      for (let i = 0; i <= 93; i++) {
-        ["", "s"].forEach(suffix => {
-          const key = `${i}${suffix}`;
-          const img = new Image();
-          img.src = `icons/${key}.png`;
-          allTiles[key] = img;
-
-          const tileDiv = document.createElement("div");
-          tileDiv.className = "tile";
-          tileDiv.style.backgroundImage = `url(icons/${key}.png)`;
-          tileDiv.dataset.key = key;
-          tileDiv.addEventListener("click", () => {
-            selectedTileKey = key;
-            document.querySelectorAll(".tile").forEach(el => el.style.outline = "");
-            tileDiv.style.outline = "2px solid blue";
-          });
-          sidebar.appendChild(tileDiv);
-        });
-      }
-    }
-
-    function drawGrid() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
-          ctx.strokeStyle = "#ccc";
-          ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-
-          const key = grid[y][x];
-          if (key && allTiles[key]) {
-            ctx.drawImage(allTiles[key], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          }
-        }
-      }
-    }
-
-    // Left click to place, right click to delete
-    canvas.addEventListener("mousedown", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-      const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-
-      if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
-        if (e.button === 2) {
-          // Right click = delete
-          grid[y][x] = null;
-        } else if (e.button === 0 && selectedTileKey) {
-          // Left click = place
-          grid[y][x] = selectedTileKey;
-        }
-        drawGrid();
-      }
-    });
-
-    // Prevent context menu on canvas
-    canvas.addEventListener("contextmenu", e => e.preventDefault());
-
-    // Initialize
-    loadTiles();
-    drawGrid();
-  </script>
+  <script src="map.js"></script>
 </body>
 </html>
