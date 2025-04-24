@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MUD Map Maker</title>
+  <title>MUD Map Editor</title>
   <style>
     body {
       display: flex;
@@ -14,40 +14,37 @@
     #panel {
       width: 180px;
       overflow-y: auto;
-      border-right: 2px solid #ccc;
-      background: #f0f0f0;
+      background: #eee;
       padding: 5px;
+      border-right: 2px solid #ccc;
     }
     .sprite {
       width: 24px;
       height: 24px;
       margin: 2px;
-      display: inline-block;
       background-size: cover;
-      border: 1px solid transparent;
+      display: inline-block;
+      border: 1px solid #ccc;
       cursor: pointer;
     }
     .sprite.selected {
-      border-color: red;
+      border: 2px solid red;
     }
     #canvas-container {
       flex-grow: 1;
-      overflow: hidden;
-      background: #999;
-      position: relative;
+      background: #bbb;
     }
     canvas {
-      display: block;
-      background-color: #e8e8e8;
+      background: #fff;
+      image-rendering: pixelated;
     }
   </style>
 </head>
 <body>
-  <div id="panel"><div id="sprites"></div></div>
+  <div id="panel"></div>
   <div id="canvas-container">
-    <canvas id="mapCanvas" width="2000" height="2000"></canvas>
+    <canvas id="mapCanvas" width="1280" height="1280"></canvas>
   </div>
-
   <script src="map.js"></script>
 </body>
 </html>
