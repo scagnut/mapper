@@ -2,16 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tile-Based Map Maker</title>
+    <title>Basic Tile Placement</title>
     <style>
-        #iconContainer { float: left; width: 150px; }
-        #gridCanvas { border: 1px solid black; }
+        canvas { border: 1px solid black; }
     </style>
 </head>
 <body>
-    <h1>Tile-Based Mapping Tool</h1>
-    <div id="iconContainer"></div>
-    <canvas id="gridCanvas" width="640" height="640"></canvas>
-    <script src="map.js"></script>
+    <h1>Click to Place Tiles</h1>
+    <canvas id="mapCanvas" width="640" height="640"></canvas>
+    <script>
+        const canvas = document.getElementById("mapCanvas");
+        const ctx = canvas.getContext("2d");
+        const TILE_SIZE = 32;
+        const tiles = [];
+
+        const tileImg = new Image();
+        tileImg.src = "icons/0.png"; // Replace with actual path
+
+        canvas.addEventListener("click", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / TILE_SIZE) * TILE_SIZE;
+            const y = Math.floor((event.clientY - rect.top) / TILE_SIZE) * TILE_SIZE;
+            tiles.push({ x, y });
+            drawTiles();
+        });
+
+        function drawTiles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tiles.forEach(tile => ctx.drawImage(tileImg, tile.x, tile.y, TILE_SIZE, TILE_SIZE));
+        }
+    </script>
 </body>
 </html>
