@@ -8,11 +8,25 @@ const player = { x: 10, y: 10 };
 
 // Array to store loaded tiles (sprites)
 const tiles = [];
-for (let i = 0; i < 93; i++) {
-    let img = new Image();
-    img.src = `icons/${i}.png`; // Adjust path for your PNG tiles
-    tiles.push(img);
+let tilesLoaded = false;
+
+// Preload all tiles and track when they're loaded
+function loadTiles() {
+    let loadedCount = 0;
+    for (let i = 0; i < 93; i++) {
+        const img = new Image();
+        img.src = `icons/${i}.png`; // Adjust path for your PNG tiles
+        img.onload = () => {
+            loadedCount++;
+            if (loadedCount === 93) {
+                tilesLoaded = true;
+                drawMap();
+            }
+        };
+        tiles.push(img);
+    }
 }
+loadTiles();
 
 // Randomized map generation (initial grid)
 const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
@@ -22,10 +36,11 @@ const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
 // Track placed tiles by sprite index and position
 let placedTiles = [];
 let selectedSprite = null;
-let position = { x: 0, y: 0 }; // Position for sprite placement
 
 // Draw the map grid
 function drawMap() {
+    if (!tilesLoaded) return; // Wait until tiles are loaded
+
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before redrawing
 
     // Draw the randomized map grid (background tiles)
@@ -40,11 +55,6 @@ function drawMap() {
         ctx.drawImage(tiles[tile.sprite], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     });
 
-    // Draw the currently selected sprite (as a temporary underlay for placement)
-    if (selectedSprite !== null) {
-        ctx.drawImage(tiles[selectedSprite], position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-
     // Draw the player marker (just for visualization)
     ctx.fillStyle = "red";
     ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -52,34 +62,51 @@ function drawMap() {
 
 // Handle sprite selection (from the side panel)
 document.addEventListener("click", (event) => {
-    const panel = document.getElementById('sprites');
+    const panel = document.getElementById("sprites");
     const spriteDiv = event.target;
 
-    if (spriteDiv && spriteDiv.classList.contains('sprite')) {
-        selectedSprite = spriteDiv.getAttribute('data-index'); // Set selected sprite by index
+    if (spriteDiv && spriteDiv.classList.contains("sprite")) {
+        selectedSprite = parseInt(spriteDiv.getAttribute("data-index"), 10); // Set selected sprite by index
         console.log("Selected sprite: " + selectedSprite); // For debugging
     }
 });
 
-// Handle movement (WASD keys)
+// Handle movement (Arrow keys)
 document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft" && player.x > 0) player.x--;
-    if (event.key === "ArrowRight" && player.x < MAP_WIDTH - 1) player.x++;
-    if (event.key === "ArrowUp" && player.y > 0) player.y--;
-    if (event.key === "ArrowDown" && player.y < MAP_HEIGHT - 1) player.y++;
-    drawMap();
-});
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+        event.preventDefault(); // Prevent scrolling
 
-// Handle sprite placement (space bar)
-document.addEventListener("keydown", (e) => {
-    if (e.key === ' ' && selectedSprite !== null) {
-        // Place the selected sprite at the current position in the grid
-        placedTiles.push({ x: position.x, y: position.y, sprite: selectedSprite });
+        if (event.key === "ArrowLeft" && player.x > 0) player.x--;
+        if (event.key === "ArrowRight" && player.x < MAP_WIDTH - 1) player.x++;
+        if (event.key === "ArrowUp" && player.y > 0) player.y--;
+        if (event.key === "ArrowDown" && player.y < MAP_HEIGHT - 1) player.y++;
         drawMap();
     }
 });
 
+// Handle sprite placement (space bar)
+document.addEventListener("keydown", (e) => {
+    if (e.key === " " && selectedSprite !== null) {
+        // Place the selected sprite at the player's position
+        placedTiles.push({ x: player.x, y: player.y, sprite: selectedSprite });
+        drawMap();
+    }
+});
+
+// Save the map grid and placed tiles as JSON
+function saveMap() {
+    const mapData = { mapGrid, placedTiles };
+    const mapJSON = JSON.stringify(mapData);
+    const blob = new Blob([mapJSON], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "map.json";
+    a.click();
+}
+
 // Start drawing when the page loads
 window.onload = () => {
+    canvas.width = MAP_WIDTH * TILE_SIZE;
+    canvas.height = MAP_HEIGHT * TILE_SIZE;
     drawMap();
 };
