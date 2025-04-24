@@ -69,6 +69,7 @@ function drawGrid() {
   canvas.width = TILE_SIZE * GRID_WIDTH;
   canvas.height = TILE_SIZE * GRID_HEIGHT;
 
+  // Draw the grid with scaling
   for (let y = 0; y < GRID_HEIGHT; y++) {
     for (let x = 0; x < GRID_WIDTH; x++) {
       const tile = placedTiles[y][x];
@@ -77,6 +78,13 @@ function drawGrid() {
         ctx.drawImage(tiles[tile], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE * 0.8, TILE_SIZE * 0.8);
       }
       ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    }
+  }
+
+  // Draw the grid lines
+  for (let y = 0; y < GRID_HEIGHT; y++) {
+    for (let x = 0; x < GRID_WIDTH; x++) {
       ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
   }
