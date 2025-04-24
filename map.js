@@ -1,60 +1,98 @@
-const canvas = document.getElementById("gridCanvas");
-const ctx = canvas.getContext("2d");
-
-const ICON_PATH = "icons/";
 const TILE_SIZE = 32;
-const MAP_WIDTH = 20;
-const MAP_HEIGHT = 20;
-const player = { x: 10, y: 10 };
-let selectedIcon = null;
+const GRID_WIDTH = 40;
+const GRID_HEIGHT = 40;
 
-const iconContainer = document.getElementById("iconContainer");
-for (let i = 0; i <= 10; i++) {
-    let img = document.createElement("img");
-    img.src = `${ICON_PATH}${i}.png`;
-    img.style.width = "32px";
-    img.style.cursor = "pointer";
-    img.addEventListener("click", () => selectedIcon = img.src);
-    iconContainer.appendChild(img);
+const canvas = document.getElementById("mapCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = TILE_SIZE * GRID_WIDTH;
+canvas.height = TILE_SIZE * GRID_HEIGHT;
+
+const panel = document.getElementById("panel");
+
+let tiles = {};
+let selectedTile = null;
+let placedTiles = Array.from({ length: GRID_HEIGHT }, () =>
+  Array(GRID_WIDTH).fill(null)
+);
+
+let lastClickedCell = null;
+
+// Load all icons
+function loadTiles() {
+  const total = 94;
+  let loaded = 0;
+
+  function onImageLoad() {
+    loaded++;
+    if (loaded === total * 2) {
+      renderPanel();
+      drawGrid();
+    }
+  }
+
+  for (let i = 0; i < total; i++) {
+    let normal = new Image();
+    normal.src = `icons/${i}.png`;
+    normal.onload = onImageLoad;
+    tiles[i] = normal;
+
+    let special = new Image();
+    special.src = `icons/${i}s.png`;
+    special.onload = onImageLoad;
+    tiles[`${i}s`] = special;
+  }
 }
 
-const mapGrid = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
+function renderPanel() {
+  Object.entries(tiles).forEach(([key, img]) => {
+    let div = document.createElement("div");
+    div.className = "sprite";
+    div.style.backgroundImage = `url(${img.src})`;
+    div.dataset.key = key;
 
-function drawMap() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    div.onclick = () => {
+      document.querySelectorAll(".sprite").forEach(d => d.classList.remove("selected"));
+      div.classList.add("selected");
+      selectedTile = key;
+    };
 
-    for (let y = 0; y < MAP_HEIGHT; y++) {
-        for (let x = 0; x < MAP_WIDTH; x++) {
-            if (mapGrid[y][x]) {
-                let tile = new Image();
-                tile.src = mapGrid[y][x];
-                ctx.drawImage(tile, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
-        }
-    }
-
-    ctx.fillStyle = "red";
-    ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    panel.appendChild(div);
+  });
 }
 
-document.addEventListener("keydown", (event) => {
-    const { x, y } = player;
-    if (event.key === "ArrowLeft" && x > 0) player.x--;
-    if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) player.x++;
-    if (event.key === "ArrowUp" && y > 0) player.y--;
-    if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) player.y++;
-
-    if (event.key === " " && selectedIcon) {
-        mapGrid[player.y][player.x] = selectedIcon;
+function drawGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < GRID_HEIGHT; y++) {
+    for (let x = 0; x < GRID_WIDTH; x++) {
+      const tile = placedTiles[y][x];
+      if (tile) {
+        ctx.drawImage(tiles[tile], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
+  }
+}
 
-    if (event.key === "Delete") {
-        mapGrid[player.y][player.x] = null;
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+  const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+  if (x >= 0 && y >= 0 && x < GRID_WIDTH && y < GRID_HEIGHT) {
+    if (selectedTile !== null) {
+      placedTiles[y][x] = selectedTile;
+      lastClickedCell = { x, y };
+      drawGrid();
     }
-
-    drawMap();
+  }
 });
 
-window.onload = () => {
-    drawMap();
-};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Delete" && lastClickedCell) {
+    const { x, y } = lastClickedCell;
+    placedTiles[y][x] = null;
+    drawGrid();
+  }
+});
+
+loadTiles();
