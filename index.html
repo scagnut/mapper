@@ -32,15 +32,14 @@
 
     #canvas-container {
       flex-grow: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      overflow: auto;
       background: #ddd;
     }
 
     canvas {
       background: #fff;
       border: 1px solid #000;
+      display: block;
     }
   </style>
 </head>
@@ -52,8 +51,8 @@
 
   <script>
     const TILE_SIZE = 32;
-    const MAP_WIDTH = 20;
-    const MAP_HEIGHT = 20;
+    const MAP_WIDTH = 50;
+    const MAP_HEIGHT = 50;
     const canvas = document.getElementById("mapCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -66,7 +65,7 @@
 
     const grid = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
 
-    // Load tiles: 0-93 and 0s-93s
+    // Load tiles
     function loadTiles() {
       for (let i = 0; i <= 93; i++) {
         ["", "s"].forEach(suffix => {
@@ -89,16 +88,14 @@
       }
     }
 
-    // Draw the grid and any placed tiles
     function drawGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw grid background
       for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
-          ctx.strokeStyle = "#aaa";
+          ctx.strokeStyle = "#ccc";
           ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          
+
           const key = grid[y][x];
           if (key && allTiles[key]) {
             ctx.drawImage(allTiles[key], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -107,19 +104,26 @@
       }
     }
 
-    // Handle click on canvas to place tile
-    canvas.addEventListener("click", (e) => {
-      if (!selectedTileKey) return;
-
+    // Left click to place, right click to delete
+    canvas.addEventListener("mousedown", (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
       const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
 
       if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
-        grid[y][x] = selectedTileKey;
+        if (e.button === 2) {
+          // Right click = delete
+          grid[y][x] = null;
+        } else if (e.button === 0 && selectedTileKey) {
+          // Left click = place
+          grid[y][x] = selectedTileKey;
+        }
         drawGrid();
       }
     });
+
+    // Prevent context menu on canvas
+    canvas.addEventListener("contextmenu", e => e.preventDefault());
 
     // Initialize
     loadTiles();
