@@ -18,6 +18,9 @@ let placedTiles = Array.from({ length: GRID_HEIGHT }, () =>
 
 let lastClickedCell = null;
 let zoomFactor = 1;  // Initial zoom factor (1 is normal size)
+let linePath = [];  // Stores the path of the line (as an array of points)
+let currentPos = { x: 0, y: 0 };  // Current position on the grid
+let drawingLine = false;  // Whether the user is drawing a line
 
 // Load all icons
 function loadTiles() {
@@ -65,11 +68,23 @@ function renderPanel() {
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Draw lines first, behind tiles
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 1; i < linePath.length; i++) {
+    const { x: x1, y: y1 } = linePath[i - 1];
+    const { x: x2, y: y2 } = linePath[i];
+    ctx.moveTo(x1 * TILE_SIZE + TILE_SIZE / 2, y1 * TILE_SIZE + TILE_SIZE / 2);
+    ctx.lineTo(x2 * TILE_SIZE + TILE_SIZE / 2, y2 * TILE_SIZE + TILE_SIZE / 2);
+  }
+  ctx.stroke();
+
   // Update canvas size based on zoom factor
   canvas.width = TILE_SIZE * GRID_WIDTH;
   canvas.height = TILE_SIZE * GRID_HEIGHT;
 
-  // Draw the grid with scaling
+  // Draw the grid and tiles on top of the lines
   for (let y = 0; y < GRID_HEIGHT; y++) {
     for (let x = 0; x < GRID_WIDTH; x++) {
       const tile = placedTiles[y][x];
@@ -116,6 +131,34 @@ document.addEventListener("keydown", (e) => {
   } else if (e.key === "-" && zoomFactor > 0.5) {
     zoomOut();
   }
+
+  // Move around the grid with WASD keys
+  if (e.key === "w" && currentPos.y > 0) {
+    currentPos.y--;
+  } else if (e.key === "s" && currentPos.y < GRID_HEIGHT - 1) {
+    currentPos.y++;
+  } else if (e.key === "a" && currentPos.x > 0) {
+    currentPos.x--;
+  } else if (e.key === "d" && currentPos.x < GRID_WIDTH - 1) {
+    currentPos.x++;
+  }
+
+  // Start/continue drawing the line
+  if (e.key === "Enter" || e.key === " ") {
+    if (!drawingLine) {
+      drawingLine = true;
+      linePath = [ { ...currentPos } ];  // Start new line
+    } else {
+      linePath.push({ ...currentPos });
+    }
+  }
+
+  // Stop drawing the line
+  if (e.key === "Escape") {
+    drawingLine = false;
+  }
+
+  drawGrid();
 });
 
 function zoomIn() {
