@@ -33,25 +33,13 @@
             background-color: lightgray;
             cursor: pointer;
         }
-        .toggle-btn {
-            margin-top: 10px;
-            padding: 5px;
-            background-color: lightblue;
-            border: none;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
     <div id="panel">
         <div id="sprites">
-            <!-- Example sprites; you can replace this with actual sprite images -->
-            <div class="sprite" id="sprite_0" style="background-color: red;"></div>
-            <div class="sprite" id="sprite_1" style="background-color: blue;"></div>
-            <div class="sprite" id="sprite_2" style="background-color: green;"></div>
-            <!-- More sprites would go here -->
+            <!-- This will dynamically load the sprite icons from your tiles array -->
         </div>
-        <button class="toggle-btn" id="toggle-line">Toggle Line</button>
     </div>
     <div id="canvas-container">
         <canvas id="mapCanvas" width="640" height="640"></canvas>
@@ -62,52 +50,27 @@
         const canvas = document.getElementById('mapCanvas');
         const ctx = canvas.getContext('2d');
         const panel = document.getElementById('sprites');
-        const toggleBtn = document.getElementById('toggle-line');
         let selectedSprite = null;
         let position = { x: 0, y: 0 };
-        let lineEnabled = true;
         let placedTiles = [];
+
+        // Generate the sprite selection panel dynamically from the tiles
+        tiles.forEach((tile, index) => {
+            const spriteDiv = document.createElement('div');
+            spriteDiv.classList.add('sprite');
+            spriteDiv.style.backgroundImage = `url('icons/${index}.png')`;
+            spriteDiv.setAttribute('data-index', index); // Store index to identify the sprite
+            panel.appendChild(spriteDiv);
+        });
 
         // Event listener for sprite selection
         panel.addEventListener('click', (e) => {
             if (e.target.classList.contains('sprite')) {
-                selectedSprite = e.target.id;
+                selectedSprite = e.target.getAttribute('data-index');
             }
         });
 
-        // Key movement with WASD
-        document.addEventListener('keydown', (e) => {
-            const { x, y } = position;
-            if (e.key === 'w') position.y = Math.max(0, position.y - 1);
-            if (e.key === 's') position.y = Math.min(MAP_HEIGHT - 1, position.y + 1);
-            if (e.key === 'a') position.x = Math.max(0, position.x - 1);
-            if (e.key === 'd') position.x = Math.min(MAP_WIDTH - 1, position.x + 1);
-            drawMap();
-        });
-
-        // Place sprite with space bar
-        document.addEventListener('keydown', (e) => {
-            if (e.key === ' ' && selectedSprite !== null) {
-                placedTiles.push({ x: position.x, y: position.y, sprite: selectedSprite });
-                drawMap();
-            }
-        });
-
-        // Delete tile with delete key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Delete') {
-                placedTiles = placedTiles.filter(tile => tile.x !== position.x || tile.y !== position.y);
-                drawMap();
-            }
-        });
-
-        // Toggle line drawing
-        toggleBtn.addEventListener('click', () => {
-            lineEnabled = !lineEnabled;
-            drawMap();
-        });
-
-        // Draw the map and placed tiles
+        // Draw the map (using the existing map generation code)
         function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
 
@@ -118,34 +81,38 @@
                 }
             }
 
-            // Draw placed tiles with a line if enabled
-            if (lineEnabled && placedTiles.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(placedTiles[0].x * TILE_SIZE + TILE_SIZE / 2, placedTiles[0].y * TILE_SIZE + TILE_SIZE / 2);
-                placedTiles.forEach(tile => {
-                    ctx.lineTo(tile.x * TILE_SIZE + TILE_SIZE / 2, tile.y * TILE_SIZE + TILE_SIZE / 2);
-                });
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-
-            // Draw all placed tiles
+            // Draw placed tiles
             placedTiles.forEach(tile => {
-                const imgIndex = parseInt(tile.sprite.split('_')[1]);
-                ctx.drawImage(tiles[imgIndex], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.drawImage(tiles[tile.sprite], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             });
 
-            // Draw the current sprite underlay
+            // Draw the current selected sprite underlay
             if (selectedSprite !== null) {
-                const imgIndex = parseInt(selectedSprite.split('_')[1]);
-                ctx.drawImage(tiles[imgIndex], position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.drawImage(tiles[selectedSprite], position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
 
             // Draw the player marker
             ctx.fillStyle = "red";
             ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
+
+        // Handle player movement with arrow keys
+        document.addEventListener('keydown', (event) => {
+            const { x, y } = player;
+            if (event.key === "ArrowLeft" && x > 0) player.x--;
+            if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) player.x++;
+            if (event.key === "ArrowUp" && y > 0) player.y--;
+            if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) player.y++;
+            drawMap();
+        });
+
+        // Place sprite with space bar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && selectedSprite !== null) {
+                placedTiles.push({ x: position.x, y: position.y, sprite: selectedSprite });
+                drawMap();
+            }
+        });
 
         window.onload = () => {
             drawMap();
