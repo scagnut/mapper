@@ -54,6 +54,24 @@
         let position = { x: 0, y: 0 };
         let placedTiles = [];
 
+        // Initialize tiles for map
+        const TILE_SIZE = 32;
+        const MAP_WIDTH = 20;
+        const MAP_HEIGHT = 20;
+
+        // Preload all tiles
+        const tiles = [];
+        for (let i = 0; i < 93; i++) {
+            let img = new Image();
+            img.src = `icons/${i}.png`; // Adjust the path to match your setup
+            tiles.push(img);
+        }
+
+        // Randomized map generation
+        const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
+            Array.from({ length: MAP_WIDTH }, () => Math.floor(Math.random() * tiles.length))
+        );
+
         // Generate the sprite selection panel dynamically from the tiles
         tiles.forEach((tile, index) => {
             const spriteDiv = document.createElement('div');
@@ -93,16 +111,16 @@
 
             // Draw the player marker
             ctx.fillStyle = "red";
-            ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            ctx.fillRect(position.x * TILE_SIZE, position.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
 
         // Handle player movement with arrow keys
         document.addEventListener('keydown', (event) => {
-            const { x, y } = player;
-            if (event.key === "ArrowLeft" && x > 0) player.x--;
-            if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) player.x++;
-            if (event.key === "ArrowUp" && y > 0) player.y--;
-            if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) player.y++;
+            const { x, y } = position;
+            if (event.key === "ArrowLeft" && x > 0) position.x--;
+            if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) position.x++;
+            if (event.key === "ArrowUp" && y > 0) position.y--;
+            if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) position.y++;
             drawMap();
         });
 
