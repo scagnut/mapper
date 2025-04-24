@@ -10,7 +10,7 @@ const player = { x: 10, y: 10 };
 const tiles = [];
 let tilesLoaded = false;
 
-// Preload all tiles and track when they're loaded
+// Preload all tiles
 function loadTiles() {
     let loadedCount = 0;
     for (let i = 0; i < 93; i++) {
@@ -23,6 +23,7 @@ function loadTiles() {
                 drawMap();
             }
         };
+        img.onerror = () => console.error(`Failed to load tile icons/${i}.png`);
         tiles.push(img);
     }
 }
@@ -30,7 +31,7 @@ loadTiles();
 
 // Randomized map generation (initial grid)
 const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
-    Array.from({ length: MAP_WIDTH }, () => Math.floor(Math.random() * tiles.length))
+    Array.from({ length: MAP_WIDTH }, () => Math.floor(Math.random() * 93))
 );
 
 // Track placed tiles by sprite index and position
@@ -39,7 +40,10 @@ let selectedSprite = null;
 
 // Draw the map grid
 function drawMap() {
-    if (!tilesLoaded) return; // Wait until tiles are loaded
+    if (!tilesLoaded) {
+        console.warn("Tiles are not yet loaded!");
+        return;
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before redrawing
 
@@ -92,17 +96,6 @@ document.addEventListener("keydown", (e) => {
         drawMap();
     }
 });
-
-// Save the map grid and placed tiles as JSON
-function saveMap() {
-    const mapData = { mapGrid, placedTiles };
-    const mapJSON = JSON.stringify(mapData);
-    const blob = new Blob([mapJSON], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "map.json";
-    a.click();
-}
 
 // Start drawing when the page loads
 window.onload = () => {
