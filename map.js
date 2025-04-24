@@ -97,12 +97,10 @@ function drawGrid() {
     }
   }
 
-  // Draw the grid lines
-  for (let y = 0; y < GRID_HEIGHT; y++) {
-    for (let x = 0; x < GRID_WIDTH; x++) {
-      ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    }
-  }
+  // Draw the red hollow square for the current position
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(currentPos.x * TILE_SIZE, currentPos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
 canvas.addEventListener("click", (e) => {
@@ -143,13 +141,17 @@ document.addEventListener("keydown", (e) => {
     currentPos.x++;
   }
 
-  // Start/continue drawing the line
+  // Start/continue placing tiles
   if (e.key === "Enter" || e.key === " ") {
+    if (selectedTile !== null) {
+      placedTiles[currentPos.y][currentPos.x] = selectedTile;
+      drawGrid();
+    }
     if (!drawingLine) {
       drawingLine = true;
-      linePath = [ { ...currentPos } ];  // Start new line
+      linePath = [{ ...currentPos }];  // Start new line
     } else {
-      linePath.push({ ...currentPos });
+      linePath.push({ ...currentPos });  // Continue line
     }
   }
 
