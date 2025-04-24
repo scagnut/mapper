@@ -1,36 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Basic Tile Placement</title>
-    <style>
-        canvas { border: 1px solid black; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MUD Mapper</title>
+  <style>
+    body {
+      display: flex;
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    #sidebar {
+      width: 180px;
+      height: 100vh;
+      overflow-y: scroll;
+      background: #f4f4f4;
+      border-right: 2px solid #ccc;
+      padding: 5px;
+    }
+
+    .tile {
+      width: 28px;
+      height: 28px;
+      margin: 2px;
+      display: inline-block;
+      background-size: cover;
+      border: 1px solid #aaa;
+      cursor: pointer;
+    }
+
+    #canvas-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ddd;
+    }
+
+    canvas {
+      background: #fff;
+      border: 1px solid #000;
+    }
+  </style>
 </head>
 <body>
-    <h1>Click to Place Tiles</h1>
-    <canvas id="mapCanvas" width="640" height="640"></canvas>
-    <script>
-        const canvas = document.getElementById("mapCanvas");
-        const ctx = canvas.getContext("2d");
-        const TILE_SIZE = 32;
-        const tiles = [];
+  <div id="sidebar"></div>
+  <div id="canvas-container">
+    <canvas id="mapCanvas"></canvas>
+  </div>
 
-        const tileImg = new Image();
-        tileImg.src = "icons/0.png"; // Replace with actual path
+  <script>
+    const TILE_SIZE = 32;
+    const MAP_WIDTH = 20;
+    const MAP_HEIGHT = 20;
+    const canvas = document.getElementById("mapCanvas");
+    const ctx = canvas.getContext("2d");
 
-        canvas.addEventListener("click", (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((event.clientX - rect.left) / TILE_SIZE) * TILE_SIZE;
-            const y = Math.floor((event.clientY - rect.top) / TILE_SIZE) * TILE_SIZE;
-            tiles.push({ x, y });
-            drawTiles();
+    canvas.width = TILE_SIZE * MAP_WIDTH;
+    canvas.height = TILE_SIZE * MAP_HEIGHT;
+
+    const sidebar = document.getElementById("sidebar");
+    const allTiles = {};
+    let selectedTileKey = null;
+
+    const grid = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
+
+    // Load tiles: 0-93 and 0s-93s
+    function loadTiles() {
+      for (let i = 0; i <= 93; i++) {
+        ["", "s"].forEach(suffix => {
+          const key = `${i}${suffix}`;
+          const img = new Image();
+          img.src = `icons/${key}.png`;
+          allTiles[key] = img;
+
+          const tileDiv = document.createElement("div");
+          tileDiv.className = "tile";
+          tileDiv.style.backgroundImage = `url(icons/${key}.png)`;
+          tileDiv.dataset.key = key;
+          tileDiv.addEventListener("click", () => {
+            selectedTileKey = key;
+            document.querySelectorAll(".tile").forEach(el => el.style.outline = "");
+            tileDiv.style.outline = "2px solid blue";
+          });
+          sidebar.appendChild(tileDiv);
         });
+      }
+    }
 
-        function drawTiles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            tiles.forEach(tile => ctx.drawImage(tileImg, tile.x, tile.y, TILE_SIZE, TILE_SIZE));
+    // Draw the grid and any placed tiles
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid background
+      for (let y = 0; y < MAP_HEIGHT; y++) {
+        for (let x = 0; x < MAP_WIDTH; x++) {
+          ctx.strokeStyle = "#aaa";
+          ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          
+          const key = grid[y][x];
+          if (key && allTiles[key]) {
+            ctx.drawImage(allTiles[key], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          }
         }
-    </script>
+      }
+    }
+
+    // Handle click on canvas to place tile
+    canvas.addEventListener("click", (e) => {
+      if (!selectedTileKey) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+      const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+
+      if (x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT) {
+        grid[y][x] = selectedTileKey;
+        drawGrid();
+      }
+    });
+
+    // Initialize
+    loadTiles();
+    drawGrid();
+  </script>
 </body>
 </html>
