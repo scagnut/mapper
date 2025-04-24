@@ -1,117 +1,82 @@
-const canvas = document.getElementById("mapCanvas");
+const canvas = document.getElementById("gridCanvas");
 const ctx = canvas.getContext("2d");
 
+const ICON_PATH = "icons/"; // Folder where PNGs are stored
 const TILE_SIZE = 32;
 const MAP_WIDTH = 20;
 const MAP_HEIGHT = 20;
 const player = { x: 10, y: 10 };
+let selectedIcon = null;
+let showLines = false;
 
-// Array to store loaded tiles (sprites)
-const tiles = [];
-let tilesLoaded = false;
-
-// Preload all tiles
-function loadTiles() {
-    let loadedCount = 0;
-    for (let i = 0; i < 93; i++) {
-        const img = new Image();
-        img.src = `icons/${i}.png`; // Adjust path for your PNG tiles
-        img.onload = () => {
-            loadedCount++;
-            if (loadedCount === 93) {
-                tilesLoaded = true;
-                initializeSpritesPanel();
-                drawMap();
-            }
-        };
-        img.onerror = () => console.error(`Failed to load tile icons/${i}.png`);
-        tiles.push(img);
-    }
+// Load icons in sidebar
+const iconContainer = document.getElementById("iconContainer");
+for (let i = 0; i <= 10; i++) {
+    let img = document.createElement("img");
+    img.src = `${ICON_PATH}${i}.png`;
+    img.style.width = "32px";
+    img.style.cursor = "pointer";
+    img.addEventListener("click", () => selectedIcon = img.src);
+    iconContainer.appendChild(img);
 }
-loadTiles();
 
-// Randomized map generation (initial grid)
-const mapGrid = Array.from({ length: MAP_HEIGHT }, () =>
-    Array.from({ length: MAP_WIDTH }, () => Math.floor(Math.random() * 93))
-);
+// Generate empty grid
+const mapGrid = Array.from({ length: MAP_HEIGHT }, () => Array(MAP_WIDTH).fill(null));
 
-// Track placed tiles by sprite index and position
-let placedTiles = [];
-let selectedSprite = null;
-
-// Draw the map grid
+// Draw the map
 function drawMap() {
-    if (!tilesLoaded) {
-        console.warn("Tiles are not yet loaded!");
-        return;
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before redrawing
-
-    // Draw the randomized map grid (background tiles)
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
-            ctx.drawImage(tiles[mapGrid[y][x]], x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            if (mapGrid[y][x]) {
+                let tile = new Image();
+                tile.src = mapGrid[y][x];
+                ctx.drawImage(tile, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+
+            // Draw connection lines if toggled
+            if (showLines && x > 0 && mapGrid[y][x] && mapGrid[y][x - 1]) {
+                ctx.strokeStyle = "black";
+                ctx.beginPath();
+                ctx.moveTo(x * TILE_SIZE, y * TILE_SIZE + TILE_SIZE / 2);
+                ctx.lineTo((x - 1) * TILE_SIZE + TILE_SIZE, y * TILE_SIZE + TILE_SIZE / 2);
+                ctx.stroke();
+            }
         }
     }
 
-    // Draw the placed tiles (on top of the map)
-    placedTiles.forEach(tile => {
-        ctx.drawImage(tiles[tile.sprite], tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    });
-
-    // Draw the player marker (just for visualization)
+    // Draw player
     ctx.fillStyle = "red";
     ctx.fillRect(player.x * TILE_SIZE, player.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-// Initialize the sprites panel (left side panel)
-function initializeSpritesPanel() {
-    const panel = document.getElementById("sprites");
-    panel.innerHTML = ""; // Clear existing sprites (if any)
-
-    tiles.forEach((tile, index) => {
-        const spriteDiv = document.createElement("div");
-        spriteDiv.classList.add("sprite");
-        spriteDiv.style.backgroundImage = `url('icons/${index}.png')`; // Ensure path is correct
-        spriteDiv.setAttribute("data-index", index); // Store index to identify the sprite
-        panel.appendChild(spriteDiv);
-    });
-
-    // Add click event listener to select a sprite
-    panel.addEventListener("click", (e) => {
-        if (e.target.classList.contains("sprite")) {
-            selectedSprite = parseInt(e.target.getAttribute("data-index"), 10);
-            console.log("Selected sprite:", selectedSprite);
-        }
-    });
-}
-
-// Handle movement (Arrow keys)
+// Handle movement & actions
 document.addEventListener("keydown", (event) => {
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-        event.preventDefault(); // Prevent scrolling
-
-        if (event.key === "ArrowLeft" && player.x > 0) player.x--;
-        if (event.key === "ArrowRight" && player.x < MAP_WIDTH - 1) player.x++;
-        if (event.key === "ArrowUp" && player.y > 0) player.y--;
-        if (event.key === "ArrowDown" && player.y < MAP_HEIGHT - 1) player.y++;
-        drawMap();
+    const { x, y } = player;
+    if (event.key === "ArrowLeft" && x > 0) player.x--;
+    if (event.key === "ArrowRight" && x < MAP_WIDTH - 1) player.x++;
+    if (event.key === "ArrowUp" && y > 0) player.y--;
+    if (event.key === "ArrowDown" && y < MAP_HEIGHT - 1) player.y++;
+    
+    // Place icon when holding Space
+    if (event.key === " " && selectedIcon) {
+        mapGrid[player.y][player.x] = selectedIcon;
     }
+
+    // Delete tile with Delete key
+    if (event.key === "Delete") {
+        mapGrid[player.y][player.x] = null;
+    }
+
+    // Toggle connection lines with L key
+    if (event.key === "l") {
+        showLines = !showLines;
+    }
+
+    drawMap();
 });
 
-// Handle sprite placement (space bar)
-document.addEventListener("keydown", (e) => {
-    if (e.key === " " && selectedSprite !== null) {
-        // Place the selected sprite at the player's position
-        placedTiles.push({ x: player.x, y: player.y, sprite: selectedSprite });
-        drawMap();
-    }
-});
-
-// Start drawing when the page loads
 window.onload = () => {
-    canvas.width = MAP_WIDTH * TILE_SIZE;
-    canvas.height = MAP_HEIGHT * TILE_SIZE;
     drawMap();
 };
